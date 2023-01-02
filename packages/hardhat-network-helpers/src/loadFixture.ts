@@ -11,6 +11,7 @@ type Fixture<T, P> = (fixtureParameters?:P) => Promise<T>;
 interface Snapshot<T, P> {
   restorer: SnapshotRestorer;
   fixture: Fixture<T, P>;
+  parameters: P
   data: T;
 }
 
@@ -30,14 +31,12 @@ let snapshots: Array<Snapshot<any, any>> = [];
  * - Correct usage: `loadFixture(deployTokens, deployTokensParameters)`
  * - Incorrect usage: `loadFixture(async (parameters) => { ... })`
  */
-export async function loadFixture<T, P>(fixture: Fixture<T,P>, fixtureParameters?: P): Promise<T> {
+export async function loadFixture<T, P>(fixture: Fixture<T,P>, parameters?: P): Promise<T> {
   if (fixture.name === "") {
     throw new FixtureAnonymousFunctionError();
   }
 
-  const snapshot = snapshots.find((s) => s.fixture === fixture);
-
-  const { takeSnapshot } = await import("./helpers/takeSnapshot");
+  const snapshot = snapshots.find((s) => s.fixture === fixture && s.parameters === parameters);
 
   if (snapshot !== undefined) {
     try {
@@ -56,12 +55,15 @@ export async function loadFixture<T, P>(fixture: Fixture<T,P>, fixtureParameters
 
     return snapshot.data;
   } else {
-    const data = await fixture(fixtureParameters);
+
+    const { takeSnapshot } = await import("./helpers/takeSnapshot");
+    const data = await fixture(parameters);
     const restorer = await takeSnapshot();
 
     snapshots.push({
       restorer,
       fixture,
+      parameters,
       data,
     });
 
