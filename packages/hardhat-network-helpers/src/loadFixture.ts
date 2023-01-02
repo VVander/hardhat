@@ -6,15 +6,15 @@ import {
   InvalidSnapshotError,
 } from "./errors";
 
-type Fixture<T> = () => Promise<T>;
+type Fixture<T, P> = (fixtureParameters?:P) => Promise<T>;
 
-interface Snapshot<T> {
+interface Snapshot<T, P> {
   restorer: SnapshotRestorer;
-  fixture: Fixture<T>;
+  fixture: Fixture<T, P>;
   data: T;
 }
 
-let snapshots: Array<Snapshot<any>> = [];
+let snapshots: Array<Snapshot<any, any>> = [];
 
 /**
  * Useful in tests for setting up the desired state of the network.
@@ -27,10 +27,10 @@ let snapshots: Array<Snapshot<any>> = [];
  * _Warning_: don't use `loadFixture` with an anonymous function, otherwise the
  * function will be executed each time instead of using snapshots:
  *
- * - Correct usage: `loadFixture(deployTokens)`
- * - Incorrect usage: `loadFixture(async () => { ... })`
+ * - Correct usage: `loadFixture(deployTokens, deployTokensParameters)`
+ * - Incorrect usage: `loadFixture(async (parameters) => { ... })`
  */
-export async function loadFixture<T>(fixture: Fixture<T>): Promise<T> {
+export async function loadFixture<T, P>(fixture: Fixture<T,P>, fixtureParameters?: P): Promise<T> {
   if (fixture.name === "") {
     throw new FixtureAnonymousFunctionError();
   }
@@ -56,7 +56,7 @@ export async function loadFixture<T>(fixture: Fixture<T>): Promise<T> {
 
     return snapshot.data;
   } else {
-    const data = await fixture();
+    const data = await fixture(fixtureParameters);
     const restorer = await takeSnapshot();
 
     snapshots.push({
