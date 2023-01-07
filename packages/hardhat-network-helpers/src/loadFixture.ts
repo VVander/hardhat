@@ -1,5 +1,4 @@
 import type { SnapshotRestorer } from "./helpers/takeSnapshot";
-import type { zip } from ""
 
 import {
   FixtureAnonymousFunctionError,
@@ -18,7 +17,7 @@ interface Snapshot<T, P> {
 
 let snapshots: Array<Snapshot<any, any>> = [];
 
-function isEqual(x, y) {
+function isEqual(x: any, y: any): boolean{
 
   if (x === null || x === undefined || y === null || y === undefined) { return x === y; }
   // after this just checking type of one would be enough
@@ -57,7 +56,7 @@ function isEqual(x, y) {
  * - Correct usage: `loadFixture(deployTokens, deployTokensParameters)`
  * - Incorrect usage: `loadFixture(async (parameters) => { ... })`
  */
-export async function loadFixture<T, P>(fixture: Fixture<T,P>, parameters?: any): Promise<T> {
+export async function loadFixture<T, P>(fixture: Fixture<T,P>, parameters?: P): Promise<T> {
   if (fixture.name === "") {
     throw new FixtureAnonymousFunctionError();
   }
